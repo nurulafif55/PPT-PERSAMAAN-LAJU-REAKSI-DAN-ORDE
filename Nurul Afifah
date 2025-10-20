@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laju Reaksi dan Orde Reaksi</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide {
+            width: 90%;
+            max-width: 1200px;
+            height: 85vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 60px;
+            display: none;
+            flex-direction: column;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            display: flex;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .slide .footer {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #764ba2;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            border-bottom: 4px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        h3 {
+            color: #667eea;
+            font-size: 1.6em;
+            margin: 25px 0 15px 0;
+        }
+
+        p, li {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            margin-left: 40px;
+        }
+
+        .formula {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            margin: 20px 0;
+            font-size: 1.3em;
+            text-align: center;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #ffc107;
+            margin: 20px 0;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #2196F3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        td {
+            padding: 12px;
+            border: 2px solid #ddd;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 50px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .slide-number {
+            position: absolute;
+            bottom: 20px;
+            right: 40px;
+            color: #999;
+            font-size: 1em;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            left: 40px;
+            color: #764ba2;
+            font-size: 1em;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        canvas {
+            max-height: 300px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .example-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #667eea;
+        }
+
+        .sub-title {
+            text-align: center;
+            color: #764ba2;
+            font-size: 1.5em;
+            margin-top: 10px;
+        }
+
+        .objectives {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .center-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Slide 1: Judul -->
+        <div class="slide active">
+            <div class="center-content">
+                <h1>PERSAMAAN LAJU REAKSI DAN ORDE REAKSI</h1>
+                <p class="sub-title">Kimia Kelas XI</p>
+                <div style="margin-top: 50px; text-align: center;">
+                    <p style="font-size: 1.4em; color: #667eea;">✨ Mari memahami bagaimana kecepatan reaksi kimia dapat diukur dan diprediksi! ✨</p>
+                    <p style="font-size: 1.4em; color: #667eea;">Nurul Afifah | Fasril Vaudhi, S.Pd</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Tujuan Pembelajaran -->
+        <div class="slide">
+            <h2>🎯 Tujuan Pembelajaran</h2>
+            <div class="objectives">
+                <p><strong>Setelah kegiatan pembelajaran, peserta didik diharapkan dapat:</strong></p>
+                <ul style="margin-top: 20px;">
+                    <li>Menentukan orde reaksi terhadap masing-masing zat dengan berbagai cara</li>
+                    <li>Menentukan orde total dari data eksperimen</li>
+                    <li>Menuliskan persamaan laju (rate law)</li>
+                    <li>Menghitung konstanta laju (k)</li>
+                    <li>Menjelaskan hubungan antara reaksi molekuler dan reaksi total dengan persamaan laju reaksi</li>
+                    <li>Menjelaskan pengertian orde reaksi berdasarkan grafik</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 3: Engagement -->
+        <div class="slide">
+            <h2>💡 Mari Kita Mulai!</h2>
+            <div class="highlight">
+                <h3>Pengamatan:</h3>
+                <p>Amati reaksi dibawah ini!</p>
+        <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <defs>
+    <!-- Gradient untuk larutan -->
+    <linearGradient id="solution1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e3f2fd;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#90caf9;stop-opacity:0.9" />
+    </linearGradient>
+    
+    <linearGradient id="solution2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e8f5e9;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#a5d6a7;stop-opacity:0.9" />
+    </linearGradient>
+    
+    <!-- Pattern untuk gelembung -->
+    <radialGradient id="bubble">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.9" />
+      <stop offset="70%" style="stop-color:#e3f2fd;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#2196f3;stop-opacity:0.3" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Title -->
+  <rect width="1200" height="100" fill="#1976d2"/>
+  <text x="600" y="40" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="white" text-anchor="middle">
+    PENGARUH KONSENTRASI TERHADAP LAJU REAKSI
+  </text>
+  <text x="600" y="70" font-family="Arial, sans-serif" font-size="20" fill="#e3f2fd" text-anchor="middle">
+    Percobaan: Pita Mg + HCl dengan Konsentrasi Berbeda
+  </text>
+  
+  <!-- Persamaan Reaksi -->
+  <rect x="300" y="120" width="600" height="60" fill="#fff3e0" stroke="#ff9800" stroke-width="3" rx="10"/>
+  <text x="600" y="155" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#e65100" text-anchor="middle">
+    Mg(s) + 2HCl(aq) → MgCl₂(aq) + H₂(g) ↑
+  </text>
+  
+  <!-- Tabung 1: HCl 1 M (Konsentrasi Tinggi) -->
+  <g id="tabung1">
+    <!-- Label -->
+    <rect x="150" y="200" width="300" height="50" fill="#1976d2" rx="10"/>
+    <text x="300" y="232" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="white" text-anchor="middle">
+      HCl 1 M (Konsentrasi Tinggi)
+    </text>
+    
+    <!-- Tabung reaksi -->
+    <rect x="200" y="270" width="200" height="400" fill="url(#solution1)" stroke="#1565c0" stroke-width="4" rx="15"/>
+    <ellipse cx="300" cy="270" rx="100" ry="20" fill="url(#solution1)" stroke="#1565c0" stroke-width="4"/>
+    
+    <!-- Pita Mg -->
+    <rect x="285" y="500" width="30" height="120" fill="#c0c0c0" stroke="#757575" stroke-width="2" rx="3"/>
+    <text x="300" y="640" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#424242" text-anchor="middle">Mg</text>
+    
+    <!-- Gelembung BANYAK dan CEPAT -->
+    <!-- Gelembung besar -->
+    <circle cx="270" cy="580" r="18" fill="url(#bubble)" stroke="#2196f3" stroke-width="2" opacity="0.9">
+      <animate attributeName="cy" values="580;300;250" dur="1.5s" repeatCount="indefinite"/>
+      <animate attributeName="r" values="18;22;8" dur="1.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.9;0.7;0" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="330" cy="600" r="20" fill="url(#bubble)" stroke="#2196f3" stroke-width="2" opacity="0.9">
+      <animate attributeName="cy" values="600;320;270" dur="1.3s" repeatCount="indefinite"/>
+      <animate attributeName="r" values="20;24;10" dur="1.3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.9;0.7;0" dur="1.3s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="290" cy="550" r="16" fill="url(#bubble)" stroke="#2196f3" stroke-width="2" opacity="0.9">
+      <animate attributeName="cy" values="550;290;240" dur="1.4s" repeatCount="indefinite" begin="0.2s"/>
+      <animate attributeName="r" values="16;20;7" dur="1.4s" repeatCount="indefinite" begin="0.2s"/>
+      <animate attributeName="opacity" values="0.9;0.7;0" dur="1.4s" repeatCount="indefinite" begin="0.2s"/>
+    </circle>
+    
+    <circle cx="310" cy="570" r="17" fill="url(#bubble)" stroke="#2196f3" stroke-width="2" opacity="0.9">
+      <animate attributeName="cy" values="570;310;260" dur="1.6s" repeatCount="indefinite" begin="0.3s"/>
+      <animate attributeName="r" values="17;21;8" dur="1.6s" repeatCount="indefinite" begin="0.3s"/>
+      <animate attributeName="opacity" values="0.9;0.7;0" dur="1.6s" repeatCount="indefinite" begin="0.3s"/>
+    </circle>
+    
+    <!-- Gelembung sedang -->
+    <circle cx="265" cy="520" r="14" fill="url(#bubble)" stroke="#2196f3" stroke-width="1.5" opacity="0.85">
+      <animate attributeName="cy" values="520;300;260" dur="1.7s" repeatCount="indefinite" begin="0.4s"/>
+      <animate attributeName="r" values="14;17;6" dur="1.7s" repeatCount="indefinite" begin="0.4s"/>
+      <animate attributeName="opacity" values="0.85;0.6;0" dur="1.7s" repeatCount="indefinite" begin="0.4s"/>
+    </circle>
+    
+    <circle cx="335" cy="540" r="15" fill="url(#bubble)" stroke="#2196f3" stroke-width="1.5" opacity="0.85">
+      <animate attributeName="cy" values="540;310;270" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+      <animate attributeName="r" values="15;18;7" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+      <animate attributeName="opacity" values="0.85;0.6;0" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+    </circle>
+    
+    <circle cx="280" cy="500" r="13" fill="url(#bubble)" stroke="#2196f3" stroke-width="1.5" opacity="0.85">
+      <animate attributeName="cy" values="500;290;250" dur="1.8s" repeatCount="indefinite" begin="0.6s"/>
+      <animate attributeName="r" values="13;16;5" dur="1.8s" repeatCount="indefinite" begin="0.6s"/>
+      <animate attributeName="opacity" values="0.85;0.6;0" dur="1.8s" repeatCount="indefinite" begin="0.6s"/>
+    </circle>
+    
+    <circle cx="320" cy="510" r="14" fill="url(#bubble)" stroke="#2196f3" stroke-width="1.5" opacity="0.85">
+      <animate attributeName="cy" values="510;300;260" dur="1.6s" repeatCount="indefinite" begin="0.7s"/>
+      <animate attributeName="r" values="14;17;6" dur="1.6s" repeatCount="indefinite" begin="0.7s"/>
+      <animate attributeName="opacity" values="0.85;0.6;0" dur="1.6s" repeatCount="indefinite" begin="0.7s"/>
+    </circle>
+    
+    <!-- Gelembung kecil banyak -->
+    <circle cx="255" cy="480" r="10" fill="url(#bubble)" stroke="#2196f3" stroke-width="1" opacity="0.8">
+      <animate attributeName="cy" values="480;300;270" dur="2s" repeatCount="indefinite" begin="0.8s"/>
+      <animate attributeName="r" values="10;13;4" dur="2s" repeatCount="indefinite" begin="0.8s"/>
+      <animate attributeName="opacity" values="0.8;0.5;0" dur="2s" repeatCount="indefinite" begin="0.8s"/>
+    </circle>
+    
+    <circle cx="345" cy="490" r="11" fill="url(#bubble)" stroke="#2196f3" stroke-width="1" opacity="0.8">
+      <animate attributeName="cy" values="490;310;280" dur="1.9s" repeatCount="indefinite" begin="0.9s"/>
+      <animate attributeName="r" values="11;14;4" dur="1.9s" repeatCount="indefinite" begin="0.9s"/>
+      <animate attributeName="opacity" values="0.8;0.5;0" dur="1.9s" repeatCount="indefinite" begin="0.9s"/>
+    </circle>
+    
+    <circle cx="275" cy="460" r="9" fill="url(#bubble)" stroke="#2196f3" stroke-width="1" opacity="0.8">
+      <animate attributeName="cy" values="460;290;260" dur="2.1s" repeatCount="indefinite" begin="1s"/>
+      <animate attributeName="r" values="9;12;3" dur="2.1s" repeatCount="indefinite" begin="1s"/>
+      <animate attributeName="opacity" values="0.8;0.5;0" dur="2.1s" repeatCount="indefinite" begin="1s"/>
+    </circle>
+    
+    <circle cx="325" cy="470" r="10" fill="url(#bubble)" stroke="#2196f3" stroke-width="1" opacity="0.8">
+      <animate attributeName="cy" values="470;300;270" dur="2s" repeatCount="indefinite" begin="1.1s"/>
+      <animate attributeName="r" values="10;13;4" dur="2s" repeatCount="indefinite" begin="1.1s"/>
+      <animate attributeName="opacity" values="0.8;0.5;0" dur="2s" repeatCount="indefinite" begin="1.1s"/>
+    </circle>
+    
+    <circle cx="295" cy="450" r="8" fill="url(#bubble)" stroke="#2196f3" stroke-width="1" opacity="0.8">
+      <animate attributeName="cy" values="450;290;260" dur="2.2s" repeatCount="indefinite" begin="1.2s"/>
+      <animate attributeName="r" values="8;11;3" dur="2.2s" repeatCount="indefinite" begin="1.2s"/>
+      <animate attributeName="opacity" values="0.8;0.5;0" dur="2.2s" repeatCount="indefinite" begin="1.2s"/>
+    </circle>
+    
+    <!-- Keterangan -->
+    <rect x="150" y="690" width="300" height="90" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" rx="8"/>
+    <text x="300" y="715" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0d47a1" text-anchor="middle">✓ REAKSI CEPAT</text>
+    <text x="300" y="740" font-family="Arial, sans-serif" font-size="16" fill="#1565c0" text-anchor="middle">✓ Gelembung BANYAK</text>
+    <text x="300" y="765" font-family="Arial, sans-serif" font-size="16" fill="#1565c0" text-anchor="middle">✓ Gas H₂ berlimpah</text>
+  </g>
+  
+  <!-- Tabung 2: HCl 0.1 M (Konsentrasi Rendah) -->
+  <g id="tabung2">
+    <!-- Label -->
+    <rect x="650" y="200" width="300" height="50" fill="#2e7d32" rx="10"/>
+    <text x="800" y="232" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="white" text-anchor="middle">
+      HCl 0,1 M (Konsentrasi Rendah)
+    </text>
+    
+    <!-- Tabung reaksi -->
+    <rect x="700" y="270" width="200" height="400" fill="url(#solution2)" stroke="#1b5e20" stroke-width="4" rx="15"/>
+    <ellipse cx="800" cy="270" rx="100" ry="20" fill="url(#solution2)" stroke="#1b5e20" stroke-width="4"/>
+    
+    <!-- Pita Mg -->
+    <rect x="785" y="500" width="30" height="120" fill="#c0c0c0" stroke="#757575" stroke-width="2" rx="3"/>
+    <text x="800" y="640" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#424242" text-anchor="middle">Mg</text>
+    
+    <!-- Gelembung SEDIKIT dan LAMBAT -->
+    <!-- Hanya beberapa gelembung kecil -->
+    <circle cx="780" cy="590" r="10" fill="url(#bubble)" stroke="#4caf50" stroke-width="1.5" opacity="0.7">
+      <animate attributeName="cy" values="590;350;310" dur="3.5s" repeatCount="indefinite"/>
+      <animate attributeName="r" values="10;12;4" dur="3.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;0.5;0" dur="3.5s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="820" cy="600" r="9" fill="url(#bubble)" stroke="#4caf50" stroke-width="1.5" opacity="0.7">
+      <animate attributeName="cy" values="600;360;320" dur="3.8s" repeatCount="indefinite" begin="0.5s"/>
+      <animate attributeName="r" values="9;11;3" dur="3.8s" repeatCount="indefinite" begin="0.5s"/>
+      <animate attributeName="opacity" values="0.7;0.5;0" dur="3.8s" repeatCount="indefinite" begin="0.5s"/>
+    </circle>
+    
+    <circle cx="795" cy="570" r="8" fill="url(#bubble)" stroke="#4caf50" stroke-width="1" opacity="0.6">
+      <animate attributeName="cy" values="570;340;300" dur="4s" repeatCount="indefinite" begin="1s"/>
+      <animate attributeName="r" values="8;10;3" dur="4s" repeatCount="indefinite" begin="1s"/>
+      <animate attributeName="opacity" values="0.6;0.4;0" dur="4s" repeatCount="indefinite" begin="1s"/>
+    </circle>
+    
+    <circle cx="810" cy="560" r="7" fill="url(#bubble)" stroke="#4caf50" stroke-width="1" opacity="0.6">
+      <animate attributeName="cy" values="560;340;300" dur="4.2s" repeatCount="indefinite" begin="1.5s"/>
+      <animate attributeName="r" values="7;9;2" dur="4.2s" repeatCount="indefinite" begin="1.5s"/>
+      <animate attributeName="opacity" values="0.6;0.4;0" dur="4.2s" repeatCount="indefinite" begin="1.5s"/>
+    </circle>
+    
+    <circle cx="790" cy="540" r="6" fill="url(#bubble)" stroke="#4caf50" stroke-width="1" opacity="0.5">
+      <animate attributeName="cy" values="540;330;290" dur="4.5s" repeatCount="indefinite" begin="2s"/>
+      <animate attributeName="r" values="6;8;2" dur="4.5s" repeatCount="indefinite" begin="2s"/>
+      <animate attributeName="opacity" values="0.5;0.3;0" dur="4.5s" repeatCount="indefinite" begin="2s"/>
+    </circle>
+    
+    <!-- Keterangan -->
+    <rect x="650" y="690" width="300" height="90" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2" rx="8"/>
+    <text x="800" y="715" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#1b5e20" text-anchor="middle">✓ REAKSI LAMBAT</text>
+    <text x="800" y="740" font-family="Arial, sans-serif" font-size="16" fill="#2e7d32" text-anchor="middle">✓ Gelembung SEDIKIT</text>
+    <text x="800" y="765" font-family="Arial, sans-serif" font-size="16" fill="#2e7d32" text-anchor="middle">✓ Gas H₂ sedikit</text>
+  </g>
+  
+  <!-- Tanda Panah Perbandingan -->
+  <g id="comparison">
+    <line x1="450" y1="470" x2="650" y2="470" stroke="#ff5722" stroke-width="4" marker-end="url(#arrowhead)"/>
+    <line x1="650" y1="470" x2="450" y2="470" stroke="#ff5722" stroke-width="4" marker-start="url(#arrowhead2)"/>
+    
+    <defs>
+      <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+        <polygon points="0 0, 10 3, 0 6" fill="#ff5722"/>
+      </marker>
+      <marker id="arrowhead2" markerWidth="10" markerHeight="10" refX="1" refY="3" orient="auto">
+        <polygon points="10 0, 0 3, 10 6" fill="#ff5722"/>
+      </marker>
+    </defs>
+    
+    <rect x="470" y="440" width="180" height="40" fill="#ff5722" rx="20"/>
+    <text x="560" y="465" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+      BANDINGKAN
+    </text>
+  </g>
+  
+  <!-- Kesimpulan -->
+  <rect x="50" y="800" width="1100" height="0" fill="#fff9c4" stroke="#f57f17" stroke-width="3" rx="15">
+    <animate attributeName="height" from="0" to="180" dur="1s" fill="freeze" begin="2s"/>
+  </rect>
+  
+  <g opacity="0">
+    <animate attributeName="opacity" from="0" to="1" dur="0.5s" fill="freeze" begin="2.5s"/>
+    
+    <text x="600" y="850" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#f57f17" text-anchor="middle">
+      🔬 KESIMPULAN 🔬
+    </text>
+    
+    <text x="600" y="890" font-family="Arial, sans-serif" font-size="20" fill="#e65100" text-anchor="middle">
+      Semakin TINGGI konsentrasi HCl → Semakin BANYAK gelembung H₂ → Laju reaksi SEMAKIN CEPAT
+    </text>
+    
+    <text x="600" y="925" font-family="Arial, sans-serif" font-size="20" fill="#e65100" text-anchor="middle">
+      Semakin RENDAH konsentrasi HCl → Semakin SEDIKIT gelembung H₂ → Laju reaksi SEMAKIN LAMBAT
+    </text>
+    
+    <text x="600" y="960" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#d84315" text-anchor="middle">
+      ✓ KONSENTRASI mempengaruhi LAJU REAKSI
+    </text>
+  </g>
+</svg>
+    </div>
+            <div class="info-box">
+                <h3>🤔 Pertanyaan Kunci:</h3>
+                <ul>
+                    <li>Mengapa jumlah gelembung gas berbeda?</li>
+                    <li>Apakah peningkatan molaritas (konsentrasi) berpengaruh terhadap cepat atau lambatnya reaksi?</li>
+                    <li>Bagaimana kita dapat menuliskan hubungan antara molaritas dan laju reaksi dalam bentuk matematis?</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 4: Hukum Laju Reaksi -->
+        <div class="slide">
+            <h2>📐 Persamaan Laju Reaksi</h2>
+            <div class="info-box"></p>
+                <p>Persamaan atau hukum laju reaksi menyatakan hubungan antara laju reaksi dengan konsentrasi awal zat-zat pereaksi (reaktan).</p>
+                <p><strong>Prinsip:</strong> Laju reaksi dalam sistem homogen pada waktu tertentu berbanding lurus dengan konsentrasi pereaksi.</p>
+            </div>
+            <div class="formula">
+                <p><strong>Untuk reaksi:</strong> aA + bB → cC + dD</p>
+                <p style="margin-top: 20px; font-size: 1.4em;"><strong>Persamaan laju:</strong> r = k [A]ˣ [B]ʸ</p>
+            </div>
+            <div style="margin-top: 30px;">
+                <h3>Keterangan:</h3>
+                <ul>
+                    <li><strong>r</strong> = laju reaksi (M/s)</li>
+                    <li><strong>k</strong> = konstanta laju reaksi</li>
+                    <li><strong>[A], [B]</strong> = konsentrasi pereaksi (M)</li>
+                    <li><strong>x, y</strong> = orde reaksi terhadap A dan B</li>
+                    <li><strong>x + y</strong> = orde reaksi total</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 5: Jenis Reaksi -->
+        <div class="slide">
+            <h2>🔬 Jenis Reaksi dalam Laju Reaksi</h2>
+            <div class="grid-2">
+                <div class="info-box">
+                    <h3>1. Reaksi Molekuler (Elementer)</h3>
+                    <p><strong>Koefisien reaksi = Orde reaksi</strong></p>
+                    <div class="formula">
+                        <p>H₂(g) + I₂(g) → 2HI(g)</p>
+                        <p style="margin-top: 10px;">r = k[H₂][I₂]</p>
+                    </div>
+                    <p style="margin-top: 15px;"><em>Jika reaksi berlangsung beberapa tahap, tahap lambat yang menentukan laju reaksi.</em></p>
+                </div>
+                <div class="info-box">
+                    <h3>2. Reaksi Total (Kompleks)</h3>
+                    <p><strong>Koefisien reaksi ≠ Orde reaksi</strong></p>
+                    <div class="formula">
+                        <p>2N₂O₅(g) → 4NO₂(g) + O₂(g)</p>
+                        <p style="margin-top: 10px;">r = k[N₂O₅]</p>
+                    </div>
+                    <p style="margin-top: 15px;"><em>Orde reaksi ditentukan dari data eksperimen.</em></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Cara Menentukan Orde Reaksi -->
+        <div class="slide">
+            <h2>🔍 Cara Menentukan Orde Reaksi</h2>
+            <div class="objectives">
+                <ol>
+                    <li><strong>Metode Perbandingan Data Eksperimen</strong>
+                        <ul style="margin-top: 10px;">
+                            <li>Bandingkan dua percobaan dengan satu konsentrasi tetap</li>
+                            <li>Tentukan nilai pangkat dari perbandingan laju dan konsentrasi</li>
+                        </ul>
+                    </li>
+                    <li style="margin-top: 15px;"><strong>Metode Grafik</strong>
+                        <ul style="margin-top: 10px;">
+                            <li>Plot grafik [A] vs waktu dan r vs [A]</li>
+                            <li>Identifikasi pola kurva sesuai karakteristik orde</li>
+                        </ul>
+                    </li>
+                    <li style="margin-top: 15px;"><strong>Dari Koefisien Reaksi (hanya untuk reaksi elementer)</strong>
+                        <ul style="margin-top: 10px;">
+                            <li>Orde = koefisien reaksi pereaksi</li>
+                            <li>Apabila reaksi berlangsung beberapa tahap, maka yang menentukan laju reaksi adalah tahap yang lambat</li> 
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Slide 7: Soal  dengan Reaksi Beberapa Tahap -->
+        <div class="slide">
+            <h2>📝 Contoh: Menentukan Orde Reaksi dari Reaksi Beberapa Tahap </h2>
+                        <div class="highlight">
+                <p><strong>Soal:</strong></p>
+                 <p>Diketahui reaksi molekuler: NO₂(g) + CO(g) → CO₂(g) + 2NO(g), berlangsung melalui dua tahap yaitu:</p>
+                <ul style="margin-top: 15px;">
+                    <li>NO₂(g) + H₂(g) → NO(g) + H₂O(g) (lambat)</li>
+                    <li>NO₃(g) + CO(g)→ CO₂(g) + NO₂(g) (cepat)</li>
+                </ul>
+                <p style="margin-top: 20px;"><strong>Tentukan persamaan laju reaksi tersebut!</strong></p>
+            </div>
+            <div class="info-box" style="margin-top: 30px;">
+                <p><strong>Tips:</strong> Orde reaksi = koefisien reaksi tahap lambat</p>
+            </div>
+        </div>
+        
+        <!-- Slide 8: dari Data Percobaan-->
+        <div class="slide">
+            <h2>📝 Contoh: Menentukan Orde Reaksi dari Data Percobaan</h2>
+            <div class="info-box">
+                <p><strong>Misalkan laju reaksi:</strong> r = k[P]ˣ[Q]ʸ</p>
+            </div>
+            <table>
+                <tr>
+                    <th>Percobaan</th>
+                    <th>[P] (M)</th>
+                    <th>[Q] (M)</th>
+                    <th>r (M/s)</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>0,05</td>
+                    <td>0,05</td>
+                    <td>3 × 10⁻³</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>0,05</td>
+                    <td>0,10</td>
+                    <td>6 × 10⁻³</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>0,10</td>
+                    <td>0,05</td>
+                    <td>12 × 10⁻³</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Slide 9: Pembahasan -->
+        <div class="slide">
+            <h2>💡 Pembahasan</h2>
+            <div class="example-box">
+                <h3>a. Menentukan Orde terhadap P</h3>
+                <p>Pilih data dengan [Q] tetap (percobaan 1 dan 3)</p>
+                <div class="formula">
+                    <p>r₁/r₃ = k[P₁]ˣ[Q₁]ʸ / k[P₃]ˣ[Q₃]ʸ</p>
+                    <p>(3×10⁻³)/(12×10⁻³) = (0,05/0,10)ˣ</p>
+                    <p>1/4 = (1/2)ˣ</p>
+                    <p><strong>x = 2</strong></p>
+                </div>
+            </div>
+            <div class="example-box" style="margin-top: 20px;">
+                <h3>b. Menentukan Orde terhadap Q</h3>
+                <p>Pilih data dengan [P] tetap (percobaan 1 dan 2)</p>
+                <div class="formula">
+                    <p>r₁/r₂ = (0,05/0,10)ʸ</p>
+                    <p>1/2 = (1/2)ʸ</p>
+                    <p><strong>y = 1</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Hasil Akhir -->
+        <div class="slide">
+            <h2>✅ Hasil Akhir</h2>
+            <div class="highlight">
+                <h3>c. Orde Reaksi Total</h3>
+                <p class="formula">Orde total = x + y = 2 + 1 = <strong>3</strong></p>
+            </div>
+            <div class="highlight">
+                <h3>d. Persamaan Laju Reaksi</h3>
+                <p class="formula">r = k[P]²[Q]</p>
+            </div>
+            <div class="highlight">
+                <h3>e. Menghitung Konstanta k</h3>
+                <p>Gunakan salah satu data percobaan:</p>
+                <div class="formula">
+                    <p>3×10⁻³ = k(0,05)²(0,05)</p>
+                    <p>k = 3×10⁻³ / (2,5×10⁻⁴ × 5×10⁻²)</p>
+                    <p><strong>k = 24 M⁻²s⁻¹</strong></p>
+            </div>
+            </div>
+            <div class="highlight">
+                <h3>Bagaimana jika dalam tabel di ganti laju reaksi menjadi waktu?</h3>
+                <div class="formula">
+                    <p>laju reaksi besar  -> reaksi cepat, dan sebaliknya</p>
+                    <p>waktu reaksi besar -> reaksi lambat, dan sebaliknya</p>
+                </div>
+                <p>Coba tentukan persamaan reaksi dari data hasil percobaan dibawah ini!</p>
+                </div>
+            <table>
+                <tr>
+                    <th>Percobaan</th>
+                    <th>[P] (M)</th>
+                    <th>[Q] (M)</th>
+                    <th>t (s)</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>0,1</td>
+                    <td>0,1</td>
+                    <td>36</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>0,1</td>
+                    <td>0,3</td>
+                    <td>4</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>0,2</td>
+                    <td>0,3</td>
+                    <td>4</td>
+                </tr>
+            </table>
+        </div>
+
+         <!-- Slide 11: Orde Reaksi -->
+        <div class="slide">
+            <h2>📊 Orde Reaksi</h2>
+            <div class="highlight">
+                <p><strong>Definisi:</strong> Orde reaksi merupakan pangkat bilangan pada konsentrasi pereaksi yang menyatakan besarnya pengaruh konsentrasi pada laju reaksi.</p>
+            </div>
+            <div class="grid-2">
+                <div class="example-box">
+                    <h3>Orde 0</h3>
+                    <p>Perubahan konsentrasi pereaksi <strong>tidak mempengaruhi</strong> laju reaksi</p>
+                    <p class="formula">r = k</p>
+                </div>
+                <div class="example-box">
+                    <h3>Orde 1</h3>
+                    <p>Laju reaksi <strong>berbanding lurus</strong> dengan konsentrasi pereaksi</p>
+                    <p class="formula">r = k[A]</p>
+                </div>
+            </div>
+            <div class="example-box" style="margin-top: 20px;">
+                <h3>Orde 2</h3>
+                <p>Laju reaksi merupakan <strong>pangkat dua</strong> dari konsentrasi pereaksi</p>
+                <p class="formula">r = k[A]²</p>
+            </div>
+            <div class="info-box" style="margin-top: 20px;">
+                <p><strong>Catatan:</strong> Orde reaksi ditentukan berdasarkan hasil percobaan, dapat berupa bilangan bulat (0, 1, 2, 3) atau pecahan (½).</p>
+            </div>
+        </div>
+
+        <!-- Slide 12: Karakteristik Orde 0 -->
+        <div class="slide">
+            <h2>📈 Karakteristik Orde 0</h2>
+            <div class="formula">
+                <p><strong>Persamaan:</strong> r = k</p>
+                <p><strong>Satuan k:</strong> M/s atau M·s⁻¹</p>
+            </div>
+            <div class="info-box">
+                <h3>Penjelasan:</h3>
+                <p>Laju reaksi <strong>tidak bergantung</strong> pada konsentrasi pereaksi. Perubahan konsentrasi tidak mengubah laju reaksi.</p>
+            </div>
+            <div class="grid-2">
+                <div class="chart-container">
+                    <h3 style="text-align: center; color: #667eea; margin-bottom: 15px;">Grafik [A] vs Waktu</h3>
+                    <canvas id="chart0a"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 style="text-align: center; color: #667eea; margin-bottom: 15px;">Grafik Laju vs [A]</h3>
+                    <canvas id="chart0b"></canvas>
+                </div>
+            </div>
+            <div class="footer"></div>
+        </div>
+
+        <!-- Slide 13: Karakteristik Orde 1 -->
+        <div class="slide">
+            <h2>📈 Karakteristik Orde 1</h2>
+            <div class="formula">
+                <p><strong>Persamaan:</strong> r = k[A]</p>
+                <p><strong>Satuan k:</strong> s⁻¹</p>
+            </div>
+            <div class="info-box">
+                <h3>Penjelasan:</h3>
+                <p>Laju reaksi <strong>berbanding lurus</strong> dengan konsentrasi pereaksi. Jika konsentrasi dinaikkan 2 kali, laju reaksi juga naik 2 kali.</p>
+            </div>
+            <div class="grid-2">
+                <div class="chart-container">
+                    <h3 style="text-align: center; color: #667eea; margin-bottom: 15px;">Grafik [A] vs Waktu</h3>
+                    <canvas id="chart1a"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 style="text-align: center; color: #667eea; margin-bottom: 15px;">Grafik Laju vs [A]</h3>
+                    <canvas id="chart1b"></canvas>
+                </div>
+            </div>
+            <div class="footer"></div>
+        </div>
+
+        <!-- Slide 14: Karakteristik Orde 2 -->
+        <div class="slide">
+            <h2>📈 Karakteristik Orde 2</h2>
+            <div class="formula">
+                <p><strong>Persamaan:</strong> r = k[A]²</p>
+                <p><strong>Satuan k:</strong> M⁻¹s⁻¹</p>
+            </div>
+            <div class="info-box">
+                <h3>Penjelasan:</h3>
+                <p>Laju reaksi <strong>berbanding kuadrat</strong> dengan konsentrasi pereaksi. Jika konsentrasi dinaikkan 2 kali, laju reaksi naik 4 kali (2²).</p>
+            </div>
+            <div class="grid-2">
+                <div class="chart-container">
+                    <h3 style="text-align: center; color: #667eea; margin-bottom: 15px;">Grafik [A] vs Waktu</h3>
+                    <canvas id="chart2a"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 style="text-align: center; color: #667eea; margin-bottom: 15px;">Grafik Laju vs [A]</h3>
+                    <canvas id="chart2b"></canvas>
+                </div>
+            </div>
+            <div class="footer"></div>
+        </div>
+
+        <!-- Slide 15: Latihan -->
+        <div class="slide">
+            <h2>💪 Latihan Soal</h2>
+            
+            <div class="highlight">
+                <p><strong>Soal:</strong> Untuk reaksi 2NO(g) + O₂(g) → 2NO₂(g)</p>
+                <ul style="margin-top: 15px;">
+                    <li>Bila [NO] awal dinaikkan menjadi 2 kali dan [O₂] tetap, maka laju reaksi menjadi 4 kali lebih besar</li>
+                    <li>Bila [NO] awal dan [O₂] masing-masing dinaikkan menjadi 2 kali, maka laju reaksi menjadi 8 kali lebih besar</li>
+                </ul>
+                <p style="margin-top: 20px;"><strong>Tentukan persamaan laju reaksi tersebut!</strong></p>
+            </div>
+            <div class="info-box" style="margin-top: 30px;">
+                <p><strong>Tips:</strong> Gunakan metode perbandingan untuk menentukan orde terhadap NO dan O₂</p>
+            </div>
+        </div>
+
+        <!-- Slide 16: Kesimpulan -->
+        <div class="slide">
+            <h2>🎓 Kesimpulan</h2>
+            <div class="objectives">
+                <ul>
+                    <li>Laju reaksi dipengaruhi oleh konsentrasi pereaksi sesuai dengan persamaan <strong>r = k[A]ˣ[B]ʸ</strong></li>
+                    <li>Orde reaksi menunjukkan seberapa besar pengaruh konsentrasi terhadap laju reaksi</li>
+                    <li>Orde reaksi dapat berupa 0, 1, 2, 3, atau pecahan, dan ditentukan dari data eksperimen</li>
+                    <li>Reaksi molekuler: koefisien = orde; Reaksi kompleks: ditentukan dari eksperimen</li>
+                    <li>Konstanta laju (k) menunjukkan kecepatan reaksi dan memiliki satuan yang berbeda untuk setiap orde</li>
+                </ul>
+            </div>
+            <div class="highlight" style="margin-top: 30px;">
+                <h3 style="text-align: center;">🌟 Terus berlatih untuk menguasai konsep ini! 🌟</h3>
+            </div>
+        </div>
+
+        <!-- Slide 17: Terima Kasih -->
+        <div class="slide">
+            <div class="center-content">
+                <h1>Terima Kasih! 🙏</h1>
+                <p style="font-size: 1.5em; margin-top: 30px; color: #667eea;">Semoga materi ini bermanfaat</p>
+                <p style="font-size: 1.3em; margin-top: 20px; color: #764ba2;">Selamat mengerjakan penugasan ✨</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="prevBtn" onclick="changeSlide(-1)">← Sebelumnya</button>
+        <button id="nextBtn" onclick="changeSlide(1)">Selanjutnya →</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+            
+            // Scroll to top of slide
+            slides[currentSlide].scrollTop = 0;
+        }
+
+        function changeSlide(direction) {
+            showSlide(currentSlide + direction);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+        });
+
+        // Initialize
+        showSlide(0);
+    </script>
+</body>
+</html>
